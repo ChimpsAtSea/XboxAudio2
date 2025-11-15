@@ -36,8 +36,12 @@ project(XboxAudio2 LANGUAGES CXX ASM_MASM)
 # --- add ffmpeg package to cmake ---
 find_package(FFMPEG REQUIRED)
 
+# --- xaudio2 project ---
+set(XAUDIO2_VARIANT "1" CACHE STRING "XAudio2 Variant")
+
 file(GLOB_RECURSE XAUDIO_SOURCES CONFIGURE_DEPENDS "include/*.h" "source/*.cpp" "source/*.h" "source/*.asm")
 add_library(XAudio2_9 SHARED ${XAUDIO_SOURCES})
+target_compile_definitions(XAudio2_9 PRIVATE "XAUDIO2_VARIANT=${XAUDIO2_VARIANT}")
 target_include_directories(XAudio2_9 PRIVATE include)
 
 target_include_directories(XAudio2_9 PRIVATE ${FFMPEG_INCLUDE_DIRS})

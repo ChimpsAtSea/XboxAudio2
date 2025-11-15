@@ -51,7 +51,14 @@ BOOL WINAPI DllMain(
         return TRUE;
 
     // TODO: Dynamic check
-#if 1
+#if XAUDIO2_VARIANT == 0
+    OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
+    OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
+    OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
+    OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
+    OrdinalProc5 = GetProcAddress(hinstDLL, "X3DAudioCalculate");
+    OrdinalProc6 = GetProcAddress(hinstDLL, "X3DAudioInitialize");
+#elif XAUDIO2_VARIANT == 1
     OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
     OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
     OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
@@ -59,12 +66,7 @@ BOOL WINAPI DllMain(
     OrdinalProc5 = GetProcAddress(hinstDLL, "X3DAudioCalculate");
     OrdinalProc6 = GetProcAddress(hinstDLL, "X3DAudioInitialize");
 #else
-    OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
-    OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-    OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-    OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
-    OrdinalProc5 = GetProcAddress(hinstDLL, "X3DAudioCalculate");
-    OrdinalProc6 = GetProcAddress(hinstDLL, "X3DAudioInitialize");
+#error Unknown XAUDIO2_VARIANT
 #endif
     return TRUE;
 }
