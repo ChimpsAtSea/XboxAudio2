@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(XboxAudio2 LANGUAGES CXX ASM_MASM)
+add_subdirectory(lib)
 
 file(GLOB_RECURSE XAUDIO_SOURCES CONFIGURE_DEPENDS "include/*.h" "source/*.cpp" "source/*.h" "source/*.asm")
 add_library(XAudio2_9 SHARED ${XAUDIO_SOURCES})
@@ -12,3 +13,6 @@ target_link_libraries(XAudio2_9 PRIVATE ${FFMPEG_LIBRARIES})
 
 find_package(wil CONFIG REQUIRED)
 target_link_libraries(XAudio2_9 PRIVATE WIL::WIL)
+
+target_link_directories(XAudio2_9 PRIVATE lib)
+target_link_libraries(XAudio2_9 PRIVATE kernelx)
