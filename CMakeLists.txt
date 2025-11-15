@@ -33,8 +33,9 @@ include(${VCPKG_TOOLCHAIN_FILE})
 # --- xaudio2 library ---
 project(XboxAudio2 LANGUAGES CXX ASM_MASM)
 
-# --- add ffmpeg package to cmake ---
+# --- add ffmpeg and wil package to cmake ---
 find_package(FFMPEG REQUIRED)
+find_package(wil CONFIG REQUIRED)
 
 # --- xaudio2 project ---
 set(XAUDIO2_VARIANT "1" CACHE STRING "XAudio2 Variant")
@@ -48,5 +49,14 @@ target_include_directories(XAudio2_9 PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_directories(XAudio2_9 PRIVATE ${FFMPEG_LIBRARY_DIRS})
 target_link_libraries(XAudio2_9 PRIVATE ${FFMPEG_LIBRARIES})
 
-find_package(wil CONFIG REQUIRED)
 target_link_libraries(XAudio2_9 PRIVATE WIL::WIL)
+
+# --- install target ---
+install(TARGETS XAudio2_9 EXPORT XboxAudio2Targets)
+
+# --- install ffmpeg runtime dlls ---
+install(FILES
+    "$<TARGET_FILE_DIR:XAudio2_9>/avcodec-61.dll"
+    "$<TARGET_FILE_DIR:XAudio2_9>/avutil-59.dll"
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
