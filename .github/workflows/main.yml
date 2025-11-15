@@ -1,0 +1,55 @@
+name: XboxAudio2 - Visual Studio 2022
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches:  [main, master]
+
+jobs:
+  build:
+    name: Build XboxAudio2
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.2.2
+        with:
+          submodules: 'recursive'
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2.0.2
+
+      - name: Configure CMake
+        run: cmake -S . -B artifacts -G "Visual Studio 17 2022" -A x64
+
+      - name: Build Debug
+        run: cmake --build artifacts --config Debug
+
+      - name: Upload Debug Artifacts
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: XboxAudio2 Debug
+          compression-level: 9
+          path: |
+            artifacts/Debug/*.dll
+            artifacts/Debug/*.lib
+            artifacts/Debug/*.pdb
+          if-no-files-found: warn
+
+      - name: Build Release
+        run: cmake --build artifacts --config Release
+
+      - name: Upload Release Artifacts
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: XboxAudio2 Release
+          compression-level: 9
+          path: |
+            artifacts/Release/*.dll
+            artifacts/Release/*.lib
+            artifacts/Release/*.pdb
+          if-no-files-found: warn
