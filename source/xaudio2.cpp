@@ -40,37 +40,68 @@ XAUDIO2_FORWARD_ORDINAL(XAudio2CreateV2_9, 8)
 XAUDIO2_FORWARD_ORDINAL(XAudio2CreateWithVersionInfo, 9)
 XAUDIO2_FORWARD_ORDINAL(XAudio2CreateWithSharedContexts, 10)
 
+static HMODULE hKernelX;
+static BOOL(*WINAPI pfnKernelXGetVersionExW)(LPOSVERSIONINFOW lpVersionInformation);
+static OSVERSIONINFOW OsVersion;
+
 BOOL WINAPI DllMain(
     _In_ HINSTANCE hinstDLL,
     _In_ DWORD fdwReason,
     _In_ LPVOID lpvReserved)
 {
-    OSVERSIONINFOW OsVersion = { sizeof(OsVersion) };
 
-    if (fdwReason != DLL_PROCESS_ATTACH)
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        {
+            hKernelX = LoadLibraryW(L"kernelx.dll");
+            if (hKernelX == nullptr)
+            {
+                return FALSE;
+            }
+
+            pfnKernelXGetVersionExW = (decltype(pfnKernelXGetVersionExW))GetProcAddress(hKernelX, "GetVersionExW");
+            if (pfnKernelXGetVersionExW == nullptr)
+            {
+                return FALSE;
+            }
+
+            OsVersion = { sizeof(OsVersion) };
+        #pragma warning(suppress : 28159)
+            if (!pfnKernelXGetVersionExW(&OsVersion))
+            {
+                return FALSE;
+            }
+        }
+
+        // 6.2.10698.0 is the oldest known OS version with CreateXAudio2Object.
+        if (OsVersion.dwMajorVersion > 6 ||
+            (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion > 2) ||
+            (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion == 2 && (OsVersion.dwBuildNumber >= 10698 && OsVersion.dwBuildNumber != 11408)))
+        {
+            OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
+            OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
+            OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
+            OrdinalProc4 = GetProcAddress(hinstDLL, "CreateXAudio2Object");
+        }
+        else
+        {
+            OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
+            OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
+            OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
+            OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
+        }
         return TRUE;
-
-    // This should link to kernelx.dll!GetVersionExW.
-#pragma warning(suppress : 28159)
-    if (!GetVersionExW(&OsVersion))
-        return FALSE;
-
-    // 6.2.10698.0 is the oldest known OS version with CreateXAudio2Object.
-    if (OsVersion.dwMajorVersion > 6 ||
-        (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion > 2) ||
-        (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion == 2 && OsVersion.dwBuildNumber >= 10698))
-    {
-        OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-        OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-        OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
-        OrdinalProc4 = GetProcAddress(hinstDLL, "CreateXAudio2Object");
-    }
-    else
-    {
-        OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
-        OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-        OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-        OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
+    case DLL_PROCESS_DETACH:
+        {
+            if (hKernelX != nullptr)
+            {
+                FreeLibrary(hKernelX);
+            }
+        }
+        return TRUE;
+    default:
+        return TRUE;
     }
 
     return TRUE;
