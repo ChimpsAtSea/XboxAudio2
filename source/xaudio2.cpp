@@ -23,8 +23,6 @@ ORDINAL_PROC(1);
 ORDINAL_PROC(2);
 ORDINAL_PROC(3);
 ORDINAL_PROC(4);
-ORDINAL_PROC(5);
-ORDINAL_PROC(6);
 
 #pragma comment(linker, "/export:CreateXAudio2Object")
 #pragma comment(linker, "/export:XAudio2Create=CreateXAudio2Object")
@@ -35,8 +33,8 @@ ORDINAL_PROC(6);
 XAUDIO2_FORWARD(CreateAudioReverb)
 XAUDIO2_FORWARD(CreateAudioVolumeMeter)
 XAUDIO2_FORWARD(CreateFX)
-XAUDIO2_FORWARD(X3DAudioCalculate)
-XAUDIO2_FORWARD(X3DAudioInitialize)
+XAUDIO2_FORWARD_ORDINAL(X3DAudioCalculate, 5)
+XAUDIO2_FORWARD_ORDINAL(X3DAudioInitialize, 6)
 XAUDIO2_FORWARD_ORDINAL(CreateAudioReverbV2_8, 7)
 XAUDIO2_FORWARD_ORDINAL(XAudio2CreateV2_9, 8)
 XAUDIO2_FORWARD_ORDINAL(XAudio2CreateWithVersionInfo, 9)
@@ -47,27 +45,34 @@ BOOL WINAPI DllMain(
     _In_ DWORD fdwReason,
     _In_ LPVOID lpvReserved)
 {
+    OSVERSIONINFOW OsVersion = { sizeof(OsVersion) };
+
     if (fdwReason != DLL_PROCESS_ATTACH)
         return TRUE;
 
-    // TODO: Dynamic check
-#if XAUDIO2_VARIANT == 0
-    OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
-    OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-    OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-    OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
-    OrdinalProc5 = GetProcAddress(hinstDLL, "X3DAudioCalculate");
-    OrdinalProc6 = GetProcAddress(hinstDLL, "X3DAudioInitialize");
-#elif XAUDIO2_VARIANT == 1
-    OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-    OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-    OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
-    OrdinalProc4 = GetProcAddress(hinstDLL, "CreateXAudio2Object");
-    OrdinalProc5 = GetProcAddress(hinstDLL, "X3DAudioCalculate");
-    OrdinalProc6 = GetProcAddress(hinstDLL, "X3DAudioInitialize");
-#else
-#error Unknown XAUDIO2_VARIANT
-#endif
+    // This should link to kernelx.dll!GetVersionExW.
+#pragma warning(suppress : 28159)
+    if (!GetVersionExW(&OsVersion))
+        return FALSE;
+
+    // 6.2.10698.0 is the oldest known OS version with CreateXAudio2Object.
+    if (OsVersion.dwMajorVersion > 6 ||
+        (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion > 2) ||
+        (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion == 2 && OsVersion.dwBuildNumber >= 10698))
+    {
+        OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
+        OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
+        OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
+        OrdinalProc4 = GetProcAddress(hinstDLL, "CreateXAudio2Object");
+    }
+    else
+    {
+        OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
+        OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
+        OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
+        OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
+    }
+
     return TRUE;
 }
 

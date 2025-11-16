@@ -1,0 +1,3 @@
+LIBRARY kernelx.dll
+EXPORTS
+    GetVersionExW

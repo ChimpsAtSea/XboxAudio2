@@ -32,6 +32,7 @@ include(${VCPKG_TOOLCHAIN_FILE})
 
 # --- xaudio2 library ---
 project(XboxAudio2 LANGUAGES CXX ASM_MASM)
+add_subdirectory(lib)
 
 # --- add ffmpeg and wil package to cmake ---
 find_package(FFMPEG REQUIRED)
