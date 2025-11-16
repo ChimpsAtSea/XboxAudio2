@@ -11,20 +11,36 @@ extern "C"
 }
 
 #include <avcodec_raii.h>
+#include <vector>
 
-class CXAudio2SourceVoiceXMA2 final : public IXAudio2SourceVoice
+class CXAudio2SourceVoiceXMA2 final :
+    public IXAudio2SourceVoice
 {
-    static constexpr size_t AUDIO_BUFFER_SIZE = 256 * 8192;
-    static constexpr size_t MAX_AUDIO_BUFFER_COUNT = 3;
+    XMA2WAVEFORMATEX xbox_wave_format;
+    WAVEFORMATIEEEFLOATEX  host_wave_format;
+
+    AVFrame *av_frame_ = nullptr;
+    AVPacket *packet = nullptr;
+
+    //float *samples_buffer = nullptr;
+    //size_t samples_buffer_size = 0;
+
+    DWORD currentBufferIndex = 0;
+    //static constexpr size_t AUDIO_BUFFER_SIZE = 0x480000;
+    //static constexpr size_t MAX_AUDIO_BUFFER_COUNT = 8;
+    static constexpr size_t BIG_BUFFER_SIZE = 0x480000 * 8;
     IXAudio2SourceVoice *m_pSource;
-    AVCodec const *m_pCodec;
-    unique_avcodec_context m_pContext;
-    wil::unique_handle m_hDecodeThread;
+    AVCodec const *xma2_codec;
+    AVCodecContext *av_context_;
+    //wil::unique_handle m_hDecodeThread;
     BOOL m_bDecodeStopRequest = FALSE;
-    BYTE m_pAudioBuffers[MAX_AUDIO_BUFFER_COUNT][AUDIO_BUFFER_SIZE];
+
+    //BYTE m_pAudioBuffers[MAX_AUDIO_BUFFER_COUNT][AUDIO_BUFFER_SIZE];
+    size_t BufferPosition = 0;
+    BYTE m_pAudioBuffer[BIG_BUFFER_SIZE];
+
     ~CXAudio2SourceVoiceXMA2();
-    CXAudio2SourceVoiceXMA2(IXAudio2SourceVoice *pSource, XMA2WAVEFORMATEX const *pSourceFormat);
-    static DWORD WINAPI DecodeThreadProc(LPVOID lpParam);
+    CXAudio2SourceVoiceXMA2(IXAudio2SourceVoice *pSource, XMA2WAVEFORMATEX const &xbox_wave_format, WAVEFORMATIEEEFLOATEX  const &host_wave_format);
 public:
     static HRESULT Create(IXAudio2SourceVoice **ppSourceVoice, IXAudio2 *pXAudio2, XMA2WAVEFORMATEX const *pSourceFormat, UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback *pCallback, XAUDIO2_VOICE_SENDS const *pSendList, XAUDIO2_EFFECT_CHAIN const *pEffectChain);
 
