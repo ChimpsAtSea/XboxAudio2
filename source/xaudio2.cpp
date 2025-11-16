@@ -77,9 +77,15 @@ HRESULT CreateXAudio2Object(
     XAUDIO2_PROCESSOR XAudio2Processor,
     void *pSharedShapeContexts)
 {
-    HRESULT hr;
     Microsoft::WRL::ComPtr<IXAudio2> pXAudio2;
-    RETURN_IF_FAILED(hr = XAudio2Create(&pXAudio2, Flags, XAudio2Processor));
-    *ppXAudio2 = new CXAudio2(pXAudio2.Get());
+    HRESULT hr = XAudio2Create(&pXAudio2, Flags, XAudio2Processor);
+    if (SUCCEEDED(hr))
+    {
+        *ppXAudio2 = new CXAudio2(pXAudio2.Get());
+    }
+    else
+    {
+        *ppXAudio2 = nullptr;
+    }
     return hr;
 }
