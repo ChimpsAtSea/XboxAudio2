@@ -16,28 +16,21 @@ extern "C"
 class CXAudio2SourceVoiceXMA2 final :
     public IXAudio2SourceVoice
 {
-    XMA2WAVEFORMATEX xbox_wave_format;
-    WAVEFORMATIEEEFLOATEX  host_wave_format;
+    static constexpr size_t RING_BUFFER_SIZE = 16 * 1024 * 1024; // 16MiB
 
-    AVFrame *av_frame_ = nullptr;
-    AVPacket *packet = nullptr;
+    size_t m_SamplesPosition = 0;
+    BYTE m_pSamplesRing[RING_BUFFER_SIZE];
+    std::vector<float> m_SamplesDecodeTemp;
 
-    //float *samples_buffer = nullptr;
-    //size_t samples_buffer_size = 0;
+    XMA2WAVEFORMATEX m_XMA2WaveFormat;
+    WAVEFORMATIEEEFLOATEX  m_WaveFormat;
 
-    DWORD currentBufferIndex = 0;
-    //static constexpr size_t AUDIO_BUFFER_SIZE = 0x480000;
-    //static constexpr size_t MAX_AUDIO_BUFFER_COUNT = 8;
-    static constexpr size_t BIG_BUFFER_SIZE = 0x480000 * 8;
-    IXAudio2SourceVoice *m_pSource;
-    AVCodec const *xma2_codec;
-    AVCodecContext *av_context_;
-    //wil::unique_handle m_hDecodeThread;
-    BOOL m_bDecodeStopRequest = FALSE;
+    AVFrame *m_pFrame = nullptr;
+    AVPacket *m_pPacket = nullptr;
+    AVCodec const *m_pXMA2Codec;
+    AVCodecContext *m_pXMA2CodecContext;
 
-    //BYTE m_pAudioBuffers[MAX_AUDIO_BUFFER_COUNT][AUDIO_BUFFER_SIZE];
-    size_t BufferPosition = 0;
-    BYTE m_pAudioBuffer[BIG_BUFFER_SIZE];
+    IXAudio2SourceVoice *m_pSourceVoice;
 
     ~CXAudio2SourceVoiceXMA2();
     CXAudio2SourceVoiceXMA2(IXAudio2SourceVoice *pSource, XMA2WAVEFORMATEX const &xbox_wave_format, WAVEFORMATIEEEFLOATEX  const &host_wave_format);
@@ -49,92 +42,92 @@ public:
     //
     void GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetails) override
     {
-        m_pSource->GetVoiceDetails(pVoiceDetails);
+        m_pSourceVoice->GetVoiceDetails(pVoiceDetails);
     }
 
     HRESULT SetOutputVoices(XAUDIO2_VOICE_SENDS const *pSendList) override
     {
-        return m_pSource->SetOutputVoices(pSendList);
+        return m_pSourceVoice->SetOutputVoices(pSendList);
     }
 
     HRESULT SetEffectChain(XAUDIO2_EFFECT_CHAIN const *pEffectChain) override
     {
-        return m_pSource->SetEffectChain(pEffectChain);
+        return m_pSourceVoice->SetEffectChain(pEffectChain);
     }
 
     HRESULT EnableEffect(UINT32 EffectIndex, UINT32 OperationSet) override
     {
-        return m_pSource->EnableEffect(EffectIndex, OperationSet);
+        return m_pSourceVoice->EnableEffect(EffectIndex, OperationSet);
     }
 
     HRESULT DisableEffect(UINT32 EffectIndex, UINT32 OperationSet) override
     {
-        return m_pSource->DisableEffect(EffectIndex, OperationSet);
+        return m_pSourceVoice->DisableEffect(EffectIndex, OperationSet);
     }
 
     void GetEffectState(UINT32 EffectIndex, BOOL *pEnabled) override
     {
-        m_pSource->GetEffectState(EffectIndex, pEnabled);
+        m_pSourceVoice->GetEffectState(EffectIndex, pEnabled);
     }
 
     HRESULT SetEffectParameters(UINT32 EffectIndex, void const *pParameters, UINT32 ParametersByteSize, UINT32 OperationSet) override
     {
-        return m_pSource->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
+        return m_pSourceVoice->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
     }
 
     HRESULT GetEffectParameters(UINT32 EffectIndex, void *pParameters, UINT32 ParametersByteSize) override
     {
-        return m_pSource->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
+        return m_pSourceVoice->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
     }
 
     HRESULT SetFilterParameters(XAUDIO2_FILTER_PARAMETERS const *pParameters, UINT32 OperationSet) override
     {
-        return m_pSource->SetFilterParameters(pParameters, OperationSet);
+        return m_pSourceVoice->SetFilterParameters(pParameters, OperationSet);
     }
 
     void GetFilterParameters(XAUDIO2_FILTER_PARAMETERS *pParameters) override
     {
-        return m_pSource->GetFilterParameters(pParameters);
+        return m_pSourceVoice->GetFilterParameters(pParameters);
     }
 
     HRESULT SetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS const *pParameters, UINT32 OperationSet) override
     {
-        return m_pSource->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
+        return m_pSourceVoice->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
     }
 
     void GetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS *pParameters) override
     {
-        m_pSource->GetOutputFilterParameters(pDestinationVoice, pParameters);
+        m_pSourceVoice->GetOutputFilterParameters(pDestinationVoice, pParameters);
     }
 
     HRESULT SetVolume(float Volume, UINT32 OperationSet) override
     {
-        return m_pSource->SetVolume(Volume, OperationSet);
+        return m_pSourceVoice->SetVolume(Volume, OperationSet);
     }
 
     void GetVolume(float *pVolume) override
     {
-        m_pSource->GetVolume(pVolume);
+        m_pSourceVoice->GetVolume(pVolume);
     }
 
     HRESULT SetChannelVolumes(UINT32 Channels, float const *pVolumes, UINT32 OperationSet) override
     {
-        return m_pSource->SetChannelVolumes(Channels, pVolumes, OperationSet);
+        return m_pSourceVoice->SetChannelVolumes(Channels, pVolumes, OperationSet);
     }
 
     void GetChannelVolumes(UINT32 Channels, float *pVolumes) override
     {
-        m_pSource->GetChannelVolumes(Channels, pVolumes);
+        m_pSourceVoice->GetChannelVolumes(Channels, pVolumes);
     }
 
     HRESULT SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float const *pLevelMatrix, UINT32 OperationSet) override
     {
-        return m_pSource->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
+        return m_pSourceVoice->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
     }
 
     void GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix) override
     {
-        m_pSource->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
+        m_pSourceVoice->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
     }
 
     void DestroyVoice() override
@@ -147,48 +140,48 @@ public:
     //
     HRESULT Start(UINT32 Flags, UINT32 OperationSet) override
     {
-        return m_pSource->Start(Flags, OperationSet);
+        return m_pSourceVoice->Start(Flags, OperationSet);
     }
 
     HRESULT Stop(UINT32 Flags, UINT32 OperationSet) override
     {
-        return m_pSource->Stop(Flags, OperationSet);
+        return m_pSourceVoice->Stop(Flags, OperationSet);
     }
 
     HRESULT SubmitSourceBuffer(XAUDIO2_BUFFER const *pBuffer, XAUDIO2_BUFFER_WMA const *pBufferWMA) override;
 
     HRESULT FlushSourceBuffers() override
     {
-        return m_pSource->FlushSourceBuffers();
+        return m_pSourceVoice->FlushSourceBuffers();
     }
 
     HRESULT Discontinuity() override
     {
-        return m_pSource->Discontinuity();
+        return m_pSourceVoice->Discontinuity();
     }
 
     HRESULT ExitLoop(UINT32 OperationSet) override
     {
-        return m_pSource->ExitLoop(OperationSet);
+        return m_pSourceVoice->ExitLoop(OperationSet);
     }
 
     void GetState(XAUDIO2_VOICE_STATE *pVoiceState, UINT32 Flags) override
     {
-        m_pSource->GetState(pVoiceState, Flags);
+        m_pSourceVoice->GetState(pVoiceState, Flags);
     }
 
     HRESULT SetFrequencyRatio(float Ratio, UINT32 OperationSet) override
     {
-        return m_pSource->SetFrequencyRatio(Ratio, OperationSet);
+        return m_pSourceVoice->SetFrequencyRatio(Ratio, OperationSet);
     }
 
     void GetFrequencyRatio(float *pRatio) override
     {
-        m_pSource->GetFrequencyRatio(pRatio);
+        m_pSourceVoice->GetFrequencyRatio(pRatio);
     }
 
     HRESULT SetSourceSampleRate(UINT32 NewSourceSampleRate) override
     {
-        return m_pSource->SetSourceSampleRate(NewSourceSampleRate);
+        return m_pSourceVoice->SetSourceSampleRate(NewSourceSampleRate);
     }
 };
