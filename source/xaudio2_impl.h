@@ -19,28 +19,28 @@ public:
     //
     // IUnknown
     //
-    HRESULT QueryInterface(REFIID riid, void **ppvObject) override
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, _COM_Outptr_ void **ppvInterface) override
     {
-        RETURN_HR_IF_NULL(E_POINTER, ppvObject);
+        RETURN_HR_IF_NULL(E_POINTER, ppvInterface);
 
         if (riid == __uuidof(IUnknown) ||
             riid == __uuidof(IXAudio2))
         {
             AddRef();
-            *ppvObject = this;
+            *ppvInterface = this;
             RETURN_HR(S_OK);
         }
 
-        *ppvObject = nullptr;
+        *ppvInterface = nullptr;
         RETURN_HR(E_NOINTERFACE);
     }
 
-    ULONG AddRef() override
+    STDMETHOD_(ULONG, AddRef) (THIS) override
     {
         return InterlockedIncrement(&m_RefCount);
     }
 
-    ULONG Release() override
+    STDMETHOD_(ULONG, Release) (THIS) override
     {
         ULONG uCount = InterlockedDecrement(&m_RefCount);
 
@@ -53,17 +53,23 @@ public:
     //
     // IXAudio2
     //
-    HRESULT RegisterForCallbacks(IXAudio2EngineCallback *pCallback) override
+    STDMETHOD(RegisterForCallbacks) (THIS_ _In_ IXAudio2EngineCallback *pCallback) override
     {
         return m_pXAudio2->RegisterForCallbacks(pCallback);
     }
 
-    void UnregisterForCallbacks(IXAudio2EngineCallback *pCallback) override
+    STDMETHOD_(void, UnregisterForCallbacks) (THIS_ _In_ IXAudio2EngineCallback *pCallback) override
     {
         m_pXAudio2->UnregisterForCallbacks(pCallback);
     }
 
-    HRESULT CreateSourceVoice(IXAudio2SourceVoice **ppSourceVoice, WAVEFORMATEX const *pSourceFormat, UINT32 Flags, float MaxFrequencyRatio, IXAudio2VoiceCallback *pCallback, XAUDIO2_VOICE_SENDS const *pSendList, XAUDIO2_EFFECT_CHAIN const *pEffectChain) override
+    STDMETHOD(CreateSourceVoice) (THIS_ _Outptr_ IXAudio2SourceVoice **ppSourceVoice,
+        _In_ const WAVEFORMATEX *pSourceFormat,
+        UINT32 Flags X2DEFAULT(0),
+        float MaxFrequencyRatio X2DEFAULT(XAUDIO2_DEFAULT_FREQ_RATIO),
+        _In_opt_ IXAudio2VoiceCallback *pCallback X2DEFAULT(NULL),
+        _In_opt_ const XAUDIO2_VOICE_SENDS *pSendList X2DEFAULT(NULL),
+        _In_opt_ const XAUDIO2_EFFECT_CHAIN *pEffectChain X2DEFAULT(NULL)) override
     {
         if (pSourceFormat->wFormatTag == WAVE_FORMAT_XMA2)
             return CXAudio2SourceVoiceXMA2::Create(ppSourceVoice, this, (XMA2WAVEFORMATEX const *)pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
@@ -71,37 +77,46 @@ public:
         return m_pXAudio2->CreateSourceVoice(ppSourceVoice, pSourceFormat, Flags, MaxFrequencyRatio, pCallback, pSendList, pEffectChain);
     }
 
-    HRESULT CreateSubmixVoice(IXAudio2SubmixVoice **ppSubmixVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, UINT32 ProcessingStage, XAUDIO2_VOICE_SENDS const *pSendList, XAUDIO2_EFFECT_CHAIN const *pEffectChain) override
+    STDMETHOD(CreateSubmixVoice) (THIS_ _Outptr_ IXAudio2SubmixVoice **ppSubmixVoice,
+        UINT32 InputChannels, UINT32 InputSampleRate,
+        UINT32 Flags X2DEFAULT(0), UINT32 ProcessingStage X2DEFAULT(0),
+        _In_opt_ const XAUDIO2_VOICE_SENDS *pSendList X2DEFAULT(NULL),
+        _In_opt_ const XAUDIO2_EFFECT_CHAIN *pEffectChain X2DEFAULT(NULL)) override
     {
         return m_pXAudio2->CreateSubmixVoice(ppSubmixVoice, InputChannels, InputSampleRate, Flags, ProcessingStage, pSendList, pEffectChain);
     }
 
-    HRESULT CreateMasteringVoice(IXAudio2MasteringVoice **ppMasteringVoice, UINT32 InputChannels, UINT32 InputSampleRate, UINT32 Flags, LPCWSTR szDeviceId, XAUDIO2_EFFECT_CHAIN const *pEffectChain, AUDIO_STREAM_CATEGORY StreamCategory) override
+    STDMETHOD(CreateMasteringVoice) (THIS_ _Outptr_ IXAudio2MasteringVoice **ppMasteringVoice,
+        UINT32 InputChannels X2DEFAULT(XAUDIO2_DEFAULT_CHANNELS),
+        UINT32 InputSampleRate X2DEFAULT(XAUDIO2_DEFAULT_SAMPLERATE),
+        UINT32 Flags X2DEFAULT(0), _In_opt_z_ LPCWSTR szDeviceId X2DEFAULT(NULL),
+        _In_opt_ const XAUDIO2_EFFECT_CHAIN *pEffectChain X2DEFAULT(NULL),
+        _In_ AUDIO_STREAM_CATEGORY StreamCategory X2DEFAULT(AudioCategory_GameEffects)) override
     {
         return m_pXAudio2->CreateMasteringVoice(ppMasteringVoice, InputChannels, InputSampleRate, Flags, szDeviceId, pEffectChain, StreamCategory);
     }
 
-    HRESULT StartEngine() override
+    STDMETHOD(StartEngine) (THIS) override
     {
         return m_pXAudio2->StartEngine();
     }
 
-    void StopEngine() override
+    STDMETHOD_(void, StopEngine) (THIS) override
     {
         m_pXAudio2->StopEngine();
     }
 
-    HRESULT CommitChanges(UINT32 OperationSet) override
+    STDMETHOD(CommitChanges) (THIS_ UINT32 OperationSet) override
     {
         return m_pXAudio2->CommitChanges(OperationSet);
     }
 
-    void GetPerformanceData(XAUDIO2_PERFORMANCE_DATA *pPerfData) override
+    STDMETHOD_(void, GetPerformanceData) (THIS_ _Out_ XAUDIO2_PERFORMANCE_DATA *pPerfData) override
     {
         m_pXAudio2->GetPerformanceData(pPerfData);
     }
-
-    void SetDebugConfiguration(XAUDIO2_DEBUG_CONFIGURATION const *pDebugConfiguration, void *pReserved)
+    STDMETHOD_(void, SetDebugConfiguration) (THIS_ _In_opt_ const XAUDIO2_DEBUG_CONFIGURATION *pDebugConfiguration,
+        _Reserved_ void *pReserved X2DEFAULT(NULL)) override
     {
         m_pXAudio2->SetDebugConfiguration(pDebugConfiguration, pReserved);
     }

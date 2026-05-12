@@ -473,7 +473,6 @@ __inline DWORD GetXmaFrameBitPosition
 )
 {
     const BYTE* pCurrentPacket;
-    DWORD nPacketsExamined = 0;
     DWORD nFrameCountSoFar = 0;
     DWORD nFramesToSkip;
     DWORD nFrameBitOffset;
@@ -516,7 +515,6 @@ __inline DWORD GetXmaFrameBitPosition
         }
 
         // If we haven't found the right packet yet, advance our counters
-        ++nPacketsExamined;
         nFrameCountSoFar += GetXmaPacketFrameCount(pCurrentPacket);
 
         // And skip to the next packet belonging to the same stream

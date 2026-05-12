@@ -79,17 +79,17 @@ BOOL WINAPI DllMain(
             (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion > 2) ||
             (OsVersion.dwMajorVersion == 6 && OsVersion.dwMinorVersion == 2 && (OsVersion.dwBuildNumber >= 10698 && OsVersion.dwBuildNumber != 11408)))
         {
-            OrdinalProc1 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-            OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-            OrdinalProc3 = GetProcAddress(hinstDLL, "CreateFX");
-            OrdinalProc4 = GetProcAddress(hinstDLL, "CreateXAudio2Object");
+            OrdinalProc1 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateAudioReverb"));
+            OrdinalProc2 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateAudioVolumeMeter"));
+            OrdinalProc3 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateFX"));
+            OrdinalProc4 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateXAudio2Object"));
         }
         else
         {
-            OrdinalProc1 = GetProcAddress(hinstDLL, "XAudio2Create");
-            OrdinalProc2 = GetProcAddress(hinstDLL, "CreateAudioReverb");
-            OrdinalProc3 = GetProcAddress(hinstDLL, "CreateAudioVolumeMeter");
-            OrdinalProc4 = GetProcAddress(hinstDLL, "CreateFX");
+            OrdinalProc1 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "XAudio2Create"));
+            OrdinalProc2 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateAudioReverb"));
+            OrdinalProc3 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateAudioVolumeMeter"));
+            OrdinalProc4 = reinterpret_cast<void*>(GetProcAddress(hinstDLL, "CreateFX"));
         }
         return TRUE;
     case DLL_PROCESS_DETACH:

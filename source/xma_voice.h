@@ -23,7 +23,6 @@ class CXAudio2SourceVoiceXMA2 final :
     std::vector<float> m_SamplesDecodeTemp;
 
     XMA2WAVEFORMATEX m_XMA2WaveFormat;
-    WAVEFORMATIEEEFLOATEX  m_WaveFormat;
 
     AVFrame *m_pFrame = nullptr;
     AVPacket *m_pPacket = nullptr;
@@ -40,97 +39,115 @@ public:
     //
     // IXAudio2Voice
     //
-    void GetVoiceDetails(XAUDIO2_VOICE_DETAILS *pVoiceDetails) override
+    STDMETHOD_(void, GetVoiceDetails) (THIS_ _Out_ XAUDIO2_VOICE_DETAILS *pVoiceDetails) override
     {
         m_pSourceVoice->GetVoiceDetails(pVoiceDetails);
     }
 
-    HRESULT SetOutputVoices(XAUDIO2_VOICE_SENDS const *pSendList) override
+    STDMETHOD(SetOutputVoices) (THIS_ _In_opt_ const XAUDIO2_VOICE_SENDS *pSendList) override
     {
         return m_pSourceVoice->SetOutputVoices(pSendList);
     }
 
-    HRESULT SetEffectChain(XAUDIO2_EFFECT_CHAIN const *pEffectChain) override
+    STDMETHOD(SetEffectChain) (THIS_ _In_opt_ const XAUDIO2_EFFECT_CHAIN *pEffectChain) override
     {
         return m_pSourceVoice->SetEffectChain(pEffectChain);
     }
 
-    HRESULT EnableEffect(UINT32 EffectIndex, UINT32 OperationSet) override
+    STDMETHOD(EnableEffect) (THIS_ UINT32 EffectIndex,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->EnableEffect(EffectIndex, OperationSet);
     }
 
-    HRESULT DisableEffect(UINT32 EffectIndex, UINT32 OperationSet) override
+    STDMETHOD(DisableEffect) (THIS_ UINT32 EffectIndex,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->DisableEffect(EffectIndex, OperationSet);
     }
 
-    void GetEffectState(UINT32 EffectIndex, BOOL *pEnabled) override
+    STDMETHOD_(void, GetEffectState) (THIS_ UINT32 EffectIndex, _Out_ BOOL *pEnabled) override
     {
         m_pSourceVoice->GetEffectState(EffectIndex, pEnabled);
     }
 
-    HRESULT SetEffectParameters(UINT32 EffectIndex, void const *pParameters, UINT32 ParametersByteSize, UINT32 OperationSet) override
+    STDMETHOD(SetEffectParameters) (THIS_ UINT32 EffectIndex,
+        _In_reads_bytes_(ParametersByteSize) const void *pParameters,
+        UINT32 ParametersByteSize,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetEffectParameters(EffectIndex, pParameters, ParametersByteSize, OperationSet);
     }
 
-    HRESULT GetEffectParameters(UINT32 EffectIndex, void *pParameters, UINT32 ParametersByteSize) override
+    STDMETHOD(GetEffectParameters) (THIS_ UINT32 EffectIndex,
+        _Out_writes_bytes_(ParametersByteSize) void *pParameters,
+        UINT32 ParametersByteSize) override
     {
         return m_pSourceVoice->GetEffectParameters(EffectIndex, pParameters, ParametersByteSize);
     }
 
-    HRESULT SetFilterParameters(XAUDIO2_FILTER_PARAMETERS const *pParameters, UINT32 OperationSet) override
+    STDMETHOD(SetFilterParameters) (THIS_ _In_ const XAUDIO2_FILTER_PARAMETERS *pParameters,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetFilterParameters(pParameters, OperationSet);
     }
 
-    void GetFilterParameters(XAUDIO2_FILTER_PARAMETERS *pParameters) override
+    STDMETHOD_(void, GetFilterParameters) (THIS_ _Out_ XAUDIO2_FILTER_PARAMETERS *pParameters) override
     {
         return m_pSourceVoice->GetFilterParameters(pParameters);
     }
 
-    HRESULT SetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS const *pParameters, UINT32 OperationSet) override
+    STDMETHOD(SetOutputFilterParameters) (THIS_ _In_opt_ IXAudio2Voice *pDestinationVoice,
+        _In_ const XAUDIO2_FILTER_PARAMETERS *pParameters,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetOutputFilterParameters(pDestinationVoice, pParameters, OperationSet);
     }
 
-    void GetOutputFilterParameters(IXAudio2Voice *pDestinationVoice, XAUDIO2_FILTER_PARAMETERS *pParameters) override
+    STDMETHOD_(void, GetOutputFilterParameters) (THIS_ _In_opt_ IXAudio2Voice *pDestinationVoice,
+        _Out_ XAUDIO2_FILTER_PARAMETERS *pParameters) override
     {
         m_pSourceVoice->GetOutputFilterParameters(pDestinationVoice, pParameters);
     }
 
-    HRESULT SetVolume(float Volume, UINT32 OperationSet) override
+    STDMETHOD(SetVolume) (THIS_ float Volume,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetVolume(Volume, OperationSet);
     }
 
-    void GetVolume(float *pVolume) override
+    STDMETHOD_(void, GetVolume) (THIS_ _Out_ float *pVolume) override
     {
         m_pSourceVoice->GetVolume(pVolume);
     }
 
-    HRESULT SetChannelVolumes(UINT32 Channels, float const *pVolumes, UINT32 OperationSet) override
+    STDMETHOD(SetChannelVolumes) (THIS_ UINT32 Channels, _In_reads_(Channels) const float *pVolumes,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetChannelVolumes(Channels, pVolumes, OperationSet);
     }
 
-    void GetChannelVolumes(UINT32 Channels, float *pVolumes) override
+    STDMETHOD_(void, GetChannelVolumes) (THIS_ UINT32 Channels, _Out_writes_(Channels) float *pVolumes) override
     {
         m_pSourceVoice->GetChannelVolumes(Channels, pVolumes);
     }
 
-    HRESULT SetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float const *pLevelMatrix, UINT32 OperationSet) override
+    STDMETHOD(SetOutputMatrix) (THIS_ _In_opt_ IXAudio2Voice *pDestinationVoice,
+        UINT32 SourceChannels, UINT32 DestinationChannels,
+        _In_reads_(SourceChannels *DestinationChannels) const float *pLevelMatrix,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix, OperationSet);
     }
 
-    void GetOutputMatrix(IXAudio2Voice *pDestinationVoice, UINT32 SourceChannels, UINT32 DestinationChannels, float *pLevelMatrix) override
+    STDMETHOD_(void, GetOutputMatrix) (THIS_ _In_opt_ IXAudio2Voice *pDestinationVoice,
+        UINT32 SourceChannels, UINT32 DestinationChannels,
+        _Out_writes_(SourceChannels *DestinationChannels) float *pLevelMatrix) override
     {
         m_pSourceVoice->GetOutputMatrix(pDestinationVoice, SourceChannels, DestinationChannels, pLevelMatrix);
     }
 
-    void DestroyVoice() override
+    STDMETHOD_(void, DestroyVoice) (THIS) override
     {
         delete this;
     }
@@ -138,49 +155,51 @@ public:
     //
     // IXAudio2SourceVoice
     //
-    HRESULT Start(UINT32 Flags, UINT32 OperationSet) override
+
+    STDMETHOD(Start) (THIS_ UINT32 Flags X2DEFAULT(0), UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->Start(Flags, OperationSet);
     }
 
-    HRESULT Stop(UINT32 Flags, UINT32 OperationSet) override
+    STDMETHOD(Stop) (THIS_ UINT32 Flags X2DEFAULT(0), UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->Stop(Flags, OperationSet);
     }
 
-    HRESULT SubmitSourceBuffer(XAUDIO2_BUFFER const *pBuffer, XAUDIO2_BUFFER_WMA const *pBufferWMA) override;
+    STDMETHOD(SubmitSourceBuffer) (THIS_ _In_ const XAUDIO2_BUFFER *pBuffer, _In_opt_ const XAUDIO2_BUFFER_WMA *pBufferWMA X2DEFAULT(NULL)) override;
 
-    HRESULT FlushSourceBuffers() override
+    STDMETHOD(FlushSourceBuffers) (THIS) override
     {
         return m_pSourceVoice->FlushSourceBuffers();
     }
 
-    HRESULT Discontinuity() override
+    STDMETHOD(Discontinuity) (THIS) override
     {
         return m_pSourceVoice->Discontinuity();
     }
 
-    HRESULT ExitLoop(UINT32 OperationSet) override
+    STDMETHOD(ExitLoop) (THIS_ UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->ExitLoop(OperationSet);
     }
 
-    void GetState(XAUDIO2_VOICE_STATE *pVoiceState, UINT32 Flags) override
+    STDMETHOD_(void, GetState) (THIS_ _Out_ XAUDIO2_VOICE_STATE *pVoiceState, UINT32 Flags X2DEFAULT(0)) override
     {
         m_pSourceVoice->GetState(pVoiceState, Flags);
     }
 
-    HRESULT SetFrequencyRatio(float Ratio, UINT32 OperationSet) override
+    STDMETHOD(SetFrequencyRatio) (THIS_ float Ratio,
+        UINT32 OperationSet X2DEFAULT(XAUDIO2_COMMIT_NOW)) override
     {
         return m_pSourceVoice->SetFrequencyRatio(Ratio, OperationSet);
     }
 
-    void GetFrequencyRatio(float *pRatio) override
+    STDMETHOD_(void, GetFrequencyRatio) (THIS_ _Out_ float *pRatio) override
     {
         m_pSourceVoice->GetFrequencyRatio(pRatio);
     }
 
-    HRESULT SetSourceSampleRate(UINT32 NewSourceSampleRate) override
+    STDMETHOD(SetSourceSampleRate) (THIS_ UINT32 NewSourceSampleRate) override
     {
         return m_pSourceVoice->SetSourceSampleRate(NewSourceSampleRate);
     }

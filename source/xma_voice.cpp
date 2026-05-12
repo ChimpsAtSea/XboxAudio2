@@ -3,12 +3,14 @@
 
 #define assert(expression) if(!(expression)) { __debugbreak(); throw 0; }
 
+#if 0
 static void av_log_callback(void *ptr, int level, char const *fmt, va_list args)
 {
     static char buffer[4096];
     vsnprintf(buffer, sizeof(buffer), fmt, args);
     OutputDebugStringA(buffer);
 }
+#endif
 
 CXAudio2SourceVoiceXMA2::~CXAudio2SourceVoiceXMA2()
 {
@@ -20,14 +22,13 @@ CXAudio2SourceVoiceXMA2::~CXAudio2SourceVoiceXMA2()
 CXAudio2SourceVoiceXMA2::CXAudio2SourceVoiceXMA2(IXAudio2SourceVoice *pSource, XMA2WAVEFORMATEX const& _xbox_wave_format, WAVEFORMATIEEEFLOATEX  const &_host_wave_format) :
     m_SamplesPosition(),
     m_pSamplesRing(),
+    m_SamplesDecodeTemp(),
     m_XMA2WaveFormat(_xbox_wave_format),
-    m_WaveFormat(_host_wave_format),
     m_pFrame(),
     m_pPacket(),
     m_pXMA2Codec(),
     m_pXMA2CodecContext(),
-    m_pSourceVoice(pSource),
-    m_SamplesDecodeTemp()
+    m_pSourceVoice(pSource)
 {
     // reserve 1MiB
     m_SamplesDecodeTemp.reserve(1024 * 1024 / sizeof(float));
@@ -132,7 +133,8 @@ HRESULT CXAudio2SourceVoiceXMA2::SubmitSourceBuffer(XAUDIO2_BUFFER const *pBuffe
 
         if (audioBytes > RING_BUFFER_SIZE)
         {
-            throw 0;
+            __debugbreak();
+            return E_FAIL;
         }
 
         size_t bytes_remaining = RING_BUFFER_SIZE - m_SamplesPosition;
