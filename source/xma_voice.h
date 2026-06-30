@@ -2,8 +2,6 @@
 #include <xaudio2.h>
 #include <xma2defs.h>
 #include <wrl/client.h>
-#include <wil/result_macros.h>
-#include <wil/win32_helpers.h>
 
 extern "C"
 {

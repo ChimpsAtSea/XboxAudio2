@@ -2,7 +2,6 @@
 #include <xaudio2.h>
 #include <xma2defs.h>
 #include <wrl/client.h>
-#include <wil/result_macros.h>
 #include "xma_voice.h"
 
 class CXAudio2 final : public IXAudio2
@@ -21,18 +20,21 @@ public:
     //
     STDMETHOD(QueryInterface) (THIS_ REFIID riid, _COM_Outptr_ void **ppvInterface) override
     {
-        RETURN_HR_IF_NULL(E_POINTER, ppvInterface);
+        if (ppvInterface == nullptr)
+        {
+            return E_POINTER;
+        }
 
         if (riid == __uuidof(IUnknown) ||
             riid == __uuidof(IXAudio2))
         {
             AddRef();
             *ppvInterface = this;
-            RETURN_HR(S_OK);
+            return S_OK;
         }
 
         *ppvInterface = nullptr;
-        RETURN_HR(E_NOINTERFACE);
+        return E_NOINTERFACE;
     }
 
     STDMETHOD_(ULONG, AddRef) (THIS) override

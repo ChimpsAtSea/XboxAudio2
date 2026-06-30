@@ -1,0 +1,4 @@
+[submodule "FFmpeg-Cmake"]
+	path = FFmpeg-Cmake
+	url = https://github.com/HaydnTrigg/FFmpeg-Cmake.git
+	branch = cmake-config

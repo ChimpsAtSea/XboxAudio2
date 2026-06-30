@@ -160,8 +160,12 @@ HRESULT CXAudio2SourceVoiceXMA2::SubmitSourceBuffer(XAUDIO2_BUFFER const *pBuffe
         Buffer.LoopCount = pBuffer->LoopCount;
         Buffer.pContext = pBuffer->pContext;
 
-        RETURN_IF_FAILED(m_pSourceVoice->SubmitSourceBuffer(&Buffer, nullptr));
+        HRESULT hr = m_pSourceVoice->SubmitSourceBuffer(&Buffer, nullptr);
+        if (FAILED(hr))
+        {
+            return hr;
+        }
     }
 
-    RETURN_HR(S_OK);
+    return S_OK;
 }
