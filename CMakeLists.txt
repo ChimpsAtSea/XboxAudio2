@@ -17,11 +17,12 @@ include(ExternalProject)
 set(FFMPEG_SUBMODULE_DIR "${CMAKE_CURRENT_LIST_DIR}/FFmpeg-Cmake")
 set(FFMPEG_BUILD_DIR     "${CMAKE_CURRENT_BINARY_DIR}/ffmpeg")
 
+# FFmpeg is always built in Release, regardless of this project's configuration.
 # Multi-config generators (Visual Studio) emit per-config subdirectories;
 # single-config generators (Ninja) do not.
 get_property(FFMPEG_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(FFMPEG_MULTI_CONFIG)
-    set(FFMPEG_CONFIG_SUBDIR "/$<CONFIG>")
+    set(FFMPEG_CONFIG_SUBDIR "/Release")
 else()
     set(FFMPEG_CONFIG_SUBDIR "")
 endif()
@@ -53,7 +54,7 @@ if(CMAKE_GENERATOR_TOOLSET)
     list(APPEND FFMPEG_GEN_ARGS -T "${CMAKE_GENERATOR_TOOLSET}")
 endif()
 if(NOT FFMPEG_MULTI_CONFIG)
-    list(APPEND FFMPEG_GEN_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+    list(APPEND FFMPEG_GEN_ARGS "-DCMAKE_BUILD_TYPE=Release")
 endif()
 
 # Build only the decoders this project needs: XMA, XMA2 and the WMA family.
@@ -78,7 +79,7 @@ ExternalProject_Add(ffmpeg
         "${CMAKE_COMMAND}" -S <SOURCE_DIR> -B <BINARY_DIR>
         #"${CMAKE_COMMAND}" -S <SOURCE_DIR> -B <BINARY_DIR> ${FFMPEG_GEN_ARGS}
     BUILD_COMMAND
-        "${CMAKE_COMMAND}" --build <BINARY_DIR> --config $<CONFIG>
+        "${CMAKE_COMMAND}" --build <BINARY_DIR> --config Release
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${FFMPEG_LIBRARIES} ${FFMPEG_RUNTIME_DLLS}
 )
