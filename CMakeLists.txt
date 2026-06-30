@@ -91,6 +91,11 @@ add_library(XAudio2_9 SHARED ${XAUDIO_SOURCES})
 target_compile_definitions(XAudio2_9 PRIVATE "XAUDIO2_VARIANT=${XAUDIO2_VARIANT}")
 target_include_directories(XAudio2_9 PRIVATE include)
 
+# --- disable all compiler warnings ---
+target_compile_options(XAudio2_9 PRIVATE /W0)
+target_compile_options(XAudio2_9 PRIVATE /w)
+target_compile_options(XAudio2_9 PRIVATE /MP)
+
 target_include_directories(XAudio2_9 PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(XAudio2_9 PRIVATE ${FFMPEG_LIBRARIES})
 add_dependencies(XAudio2_9 ffmpeg)
